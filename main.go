@@ -55,3 +55,6 @@ func main() {
 		fmt.Println(content)
 	}
 }
+
+// https://kubernetespodcast.com/ istio
+// https://heroku.com/ engineering
