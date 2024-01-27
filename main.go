@@ -1,8 +1,8 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 
@@ -16,14 +16,8 @@ func scrape(endpoint string) (content string, err error) {
 	}
 	defer resp.Body.Close()
 
-	// HTML 문서 읽기
-	html, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-
 	// goquery 문서 생성
-	doc, err := goquery.NewDocumentFromReader(strings.NewReader(string(html)))
+	doc, err := goquery.NewDocumentFromReader(resp.Body)
 	if err != nil {
 		return "", err
 	}
@@ -35,18 +29,19 @@ func scrape(endpoint string) (content string, err error) {
 		if strings.Contains(strings.ToLower(text), "istio") {
 			link, exists := s.Find("a").First().Attr("href")
 			if !exists {
-				err = fmt.Errorf("link not found for episode: %s", text)
+				episodes = append(episodes, fmt.Sprintf("Error: Link not found for episode: %s", text))
 				return
 			}
 			episodes = append(episodes, fmt.Sprintf("%s - %s", text, link))
 		}
 	})
 
+	// JSON 형식으로 변환
+	jsonContent, err := json.Marshal(episodes)
 	if err != nil {
 		return "", err
 	}
-
-	return fmt.Sprint(episodes), nil
+	return string(jsonContent), nil
 }
 
 func main() {
